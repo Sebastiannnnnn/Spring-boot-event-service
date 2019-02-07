@@ -1,16 +1,21 @@
 package com.events.controllers;
 
+import com.events.constants.Constants;
 import com.events.models.Event;
 import com.events.repository.EventRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.propertyeditors.CustomDateEditor;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.*;
 
 import org.bson.types.ObjectId;
+
 import javax.validation.Valid;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -19,9 +24,36 @@ public class EventController {
     @Autowired
     private EventRepository repository;
 
+    @Autowired
+    private MongoTemplate template;
+
+    @InitBinder
+    public void customizeBinding(WebDataBinder binder) {
+        SimpleDateFormat dateFormatter = new SimpleDateFormat(Constants.DATE_FORMAT);
+        binder.registerCustomEditor(Date.class,
+                new CustomDateEditor(dateFormatter, true));
+    }
+
     @RequestMapping(value = "/", method = RequestMethod.GET)
     public List<Event> getEvents() {
         return repository.findAll();
+    }
+
+    @RequestMapping(value = "", method = RequestMethod.GET)
+    public List<Event> getEvents(
+            @Valid @RequestParam Date dateStart,
+            @Valid @RequestParam Date dateEnd
+    ) {
+        SimpleDateFormat sdf = new SimpleDateFormat(Constants.DATE_FORMAT);
+        Query query = new Query();
+        query.addCriteria(
+                Criteria
+                        .where("eventDate.dateStart")
+                        .gte(sdf.format(dateStart))
+                        .lte(sdf.format(dateEnd))
+        );
+
+        return template.find(query, Event.class);
     }
 
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
