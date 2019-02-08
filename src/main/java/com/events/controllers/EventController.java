@@ -24,9 +24,10 @@ public class EventController {
     @Autowired
     private EventRepository repository;
 
-    @Autowired
-    private MongoTemplate template;
-
+    /**
+     * Init binder for the date format
+     * @param binder
+     */
     @InitBinder
     public void customizeBinding(WebDataBinder binder) {
         SimpleDateFormat dateFormatter = new SimpleDateFormat(Constants.DATE_FORMAT);
@@ -34,39 +35,57 @@ public class EventController {
                 new CustomDateEditor(dateFormatter, true));
     }
 
+    /**
+     * Get all the events
+     * @return              List of events
+     */
     @RequestMapping(value = "/", method = RequestMethod.GET)
     public List<Event> getEvents() {
-        return repository.findAll();
+        return repository.getEvents();
     }
 
+    /**
+     * Get list of events with dateStart and dateEnd
+     * @param dateStart     ISOString converted to Date
+     * @param dateEnd       ISOString converted to Date
+     * @return              List of events
+     */
     @RequestMapping(value = "", method = RequestMethod.GET)
     public List<Event> getEvents(
             @Valid @RequestParam Date dateStart,
             @Valid @RequestParam Date dateEnd
     ) {
         SimpleDateFormat sdf = new SimpleDateFormat(Constants.DATE_FORMAT);
-        Query query = new Query();
-        query.addCriteria(
-                Criteria
-                        .where("eventDate.dateStart")
-                        .gte(sdf.format(dateStart))
-                        .lte(sdf.format(dateEnd))
-        );
-
-        return template.find(query, Event.class);
+        return repository.getEventsByDate(sdf.format(dateStart), sdf.format(dateEnd));
     }
 
+    /**
+     * Get event by id
+     * @param id
+     * @return event        event that holds the id
+     */
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public Event getEventById(@PathVariable("id") ObjectId id) {
+        ObjectId.isValid(id.toHexString());
         return repository.findBy_id(id);
     }
 
+    /**
+     * Update targeted event
+     * @param id            targeted id
+     * @param event         event in question
+     */
     @RequestMapping(value = "/{id}", method = RequestMethod.PUT)
     public void modifyEventById(@PathVariable("id") ObjectId id, @Valid @RequestBody Event event) {
         event.set_id(id);
         repository.save(event);
     }
 
+    /**
+     * Create new event and generate id
+     * @param event         event to be created
+     * @return              created event
+     */
     @RequestMapping(value = "/", method = RequestMethod.POST)
     public Event createEvent(@Valid @RequestBody Event event) {
         event.set_id(ObjectId.get());
@@ -74,6 +93,10 @@ public class EventController {
         return event;
     }
 
+    /**
+     * Delete event by id
+     * @param id            targeted id
+     */
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
     public void deleteEvent(@PathVariable ObjectId id) {
         repository.delete(repository.findBy_id(id));
