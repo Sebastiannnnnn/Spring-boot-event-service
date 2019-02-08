@@ -1,8 +1,8 @@
 package com.events.models;
 
 public class EventDate {
-    public String dateStart;
-    public String dateEnd;
+    private String dateStart;
+    private String dateEnd;
 
     public EventDate() {}
 

@@ -3,18 +3,25 @@ package com.events.models;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 public class Event {
     @Id
-    public ObjectId _id;
+    private ObjectId _id;
 
-    public String title;
-    public String description;
-    public EventDate eventDate;
-    public List<String> locations;
-    public List<String> tags;
-    public List<EventAttendee> attendees;
+    @NotNull
+    private String title;
+    @NotNull
+    private String description;
+    @NotNull
+    private EventDate eventDate;
+    @NotNull
+    private List<String> locations;
+    @NotNull
+    private List<String> tags;
+    @NotNull
+    private List<EventAttendee> attendees;
 
     // Constructors
     public Event() {}

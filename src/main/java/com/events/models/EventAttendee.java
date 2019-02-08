@@ -1,9 +1,11 @@
 package com.events.models;
 
 public class EventAttendee {
-    public String displayName;
-    public String email;
-    public String phone;
+    private String displayName;
+    private String email;
+    private String phone;
+
+    public EventAttendee() {}
 
     public String getDisplayName() {
         return displayName;
